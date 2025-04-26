@@ -33,29 +33,38 @@ namespace RapidOcrNet.ConsoleApp
         static void ProcessImage(RapidOcr ocrEngin, string targetImg)
         {
             Console.WriteLine($"Processing {targetImg}");
-            using (SKBitmap originSrc = SKBitmap.Decode(targetImg))
+            using (SKBitmap sourceBitmap = SKBitmap.Decode(targetImg))
             {
-                OcrResult ocrResult = ocrEngin.Detect(originSrc, RapidOcrOptions.Default);
-                Console.WriteLine(ocrResult.ToString());
-                Console.WriteLine(ocrResult.StrRes);
-                Console.WriteLine();
-
-                foreach (var block in ocrResult.TextBlocks)
+                var bitmap = new SKBitmap(sourceBitmap.Width, sourceBitmap.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
+                sourceBitmap.CopyTo(bitmap);
+                try
                 {
-                    var points = block.BoxPoints;
-                    using (var canvas = new SKCanvas(originSrc))
-                    using (var paint = new SKPaint() { Color = SKColors.Red })
+                    OcrResult ocrResult = ocrEngin.Detect(bitmap, RapidOcrOptions.Default);
+                    Console.WriteLine(ocrResult.ToString());
+                    Console.WriteLine(ocrResult.StrRes);
+                    Console.WriteLine();
+
+                    foreach (var block in ocrResult.TextBlocks)
                     {
-                        canvas.DrawLine(points[0], points[1], paint);
-                        canvas.DrawLine(points[1], points[2], paint);
-                        canvas.DrawLine(points[2], points[3], paint);
-                        canvas.DrawLine(points[3], points[0], paint);
+                        var points = block.BoxPoints;
+                        using (var canvas = new SKCanvas(bitmap))
+                        using (var paint = new SKPaint() { Color = SKColors.Red })
+                        {
+                            canvas.DrawLine(points[0], points[1], paint);
+                            canvas.DrawLine(points[1], points[2], paint);
+                            canvas.DrawLine(points[2], points[3], paint);
+                            canvas.DrawLine(points[3], points[0], paint);
+                        }
+                    }
+
+                    using (var fs = new FileStream(Path.ChangeExtension(targetImg, "_ocr.png"), FileMode.Create))
+                    {
+                        bitmap.Encode(fs, SKEncodedImageFormat.Png, 100);
                     }
                 }
-
-                using (var fs = new FileStream(Path.ChangeExtension(targetImg, "_ocr.png"), FileMode.Create))
+                finally
                 {
-                    originSrc.Encode(fs, SKEncodedImageFormat.Png, 100);
+                    bitmap.Dispose();
                 }
             }
         }

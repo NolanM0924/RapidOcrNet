@@ -11,33 +11,39 @@ namespace RapidOcrNet
     {
         public static Tensor<float> SubtractMeanNormalize(SKBitmap src, float[] meanVals, float[] normVals)
         {
-            if (src.Info.ColorType != SKColorType.Bgra8888)
-            {
-                throw new ArgumentException($"This image needs to be '{SKColorType.Bgra8888}', but got '{src.Info.ColorType}'.");
-            }
+            if (src.ColorType != SKColorType.Bgra8888 && src.ColorType != SKColorType.Rgba8888)
+                throw new NotSupportedException($"Unsupported pixel format {src.ColorType}. Expected Bgra8888 or Rgba8888.");
 
             int cols = src.Width;
             int rows = src.Height;
-            int channels = src.BytesPerPixel;
-
             const int expChannels = 3; // Size of meanVals, we ignore alpha channel
-
             Tensor<float> inputTensor = new DenseTensor<float>([1, expChannels, rows, cols]);
 
-            ReadOnlySpan<byte> span = src.GetPixelSpan();
-            for (int r = 0; r < rows; ++r)
+            int pixelIndex = 0;
+            for (int y = 0; y < rows; y++)
             {
-                for (int c = 0; c < cols; ++c)
+                for (int x = 0; x < cols; x++)
                 {
-                    int i = r * cols + c;
-                    for (int ch = 0; ch < expChannels; ++ch)
+                    var color = src.GetPixel(x, y);
+                    byte r, g, b;
+                    if (src.ColorType == SKColorType.Bgra8888)
                     {
-                        byte value = span[i * channels + ch];
-                        inputTensor[0, ch, r, c] = (value - meanVals[ch]) * normVals[ch];
+                        b = color.Red;
+                        g = color.Green;
+                        r = color.Blue;
                     }
+                    else // Rgba8888
+                    {
+                        r = color.Red;
+                        g = color.Green;
+                        b = color.Blue;
+                    }
+                    inputTensor[0, 0, y, x] = (r - meanVals[0]) * normVals[0];
+                    inputTensor[0, 1, y, x] = (g - meanVals[1]) * normVals[1];
+                    inputTensor[0, 2, y, x] = (b - meanVals[2]) * normVals[2];
+                    pixelIndex += 3;
                 }
             }
-
             return inputTensor;
         }
 
