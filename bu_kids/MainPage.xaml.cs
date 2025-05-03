@@ -24,7 +24,7 @@ public partial class MainPage : ContentPage
 		{
 			StatusLabel.Text = "Initializing OCR engine...";
 
-			// Initialize OCR engine in background task
+			// Initialize OCR engine in background task weeeeeee
 			await Task.Run(() =>
 			{
 				_ocrEngine = new RapidOcr();
