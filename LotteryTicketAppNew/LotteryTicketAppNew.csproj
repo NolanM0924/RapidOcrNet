@@ -20,6 +20,7 @@
     <ApplicationVersion>1</ApplicationVersion>
 
     <NoWarn>$(NoWarn);NU1605</NoWarn>
+    <WindowsPackageType>None</WindowsPackageType>
   </PropertyGroup>
 
   <!-- Enable trimming only for Windows -->
