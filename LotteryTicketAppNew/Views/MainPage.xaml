@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:LotteryTicketAppNew.ViewModels"
+             x:Class="LotteryTicketAppNew.Views.MainPage"
+             x:DataType="vm:MainViewModel">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="25" Padding="30,0" VerticalOptions="Center">
+
+            <Label 
+                Text="{Binding Title}"
+                SemanticProperties.HeadingLevel="Level1"
+                FontSize="32"
+                HorizontalOptions="Center" />
+
+            <Label 
+                Text="{Binding StatusMessage}"
+                FontSize="14"
+                HorizontalOptions="Center"
+                IsVisible="{Binding StatusMessage, Converter={StaticResource IsNotNull}}" />
+
+            <Button
+                x:Name="PickImageBtn"
+                Text="Pick Image"
+                SemanticProperties.Hint="Picks an image to scan"
+                Command="{Binding PickAndUploadImageCommand}"
+                IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBool}}"
+                HorizontalOptions="Center" />
+
+            <Image
+                x:Name="SelectedImage"
+                Source="{Binding CurrentImage.ImagePath}"
+                HeightRequest="200"
+                IsVisible="{Binding CurrentImage, Converter={StaticResource IsNotNull}}"
+                Aspect="AspectFit"
+                HorizontalOptions="Center" />
+
+            <Button
+                Text="Clear"
+                Command="{Binding ClearImageCommand}"
+                IsEnabled="{Binding CurrentImage, Converter={StaticResource IsNotNull}}"
+                HorizontalOptions="Center" />
+
+            <ActivityIndicator 
+                IsRunning="{Binding IsScanning}"
+                IsVisible="{Binding IsScanning}"
+                HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage> 

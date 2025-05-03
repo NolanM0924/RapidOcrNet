@@ -1,72 +1,47 @@
 ﻿using SkiaSharp;
+using RapidOcrNet;
 
-namespace RapidOcrNet.ConsoleApp
+// Get the path to the models directory
+string modelsPath = Path.Combine("..", "RapidOcrNet", "models");
+string detPath = Path.Combine(modelsPath, "en_PP-OCRv3_det_infer_opt.onnx");
+string clsPath = Path.Combine(modelsPath, "ch_ppocr_mobile_v2.0_cls_infer_opt.onnx");
+string recPath = Path.Combine(modelsPath, "en_PP-OCRv3_rec_infer_opt.onnx");
+string keysPath = Path.Combine(modelsPath, "en_dict.txt");
+
+var ocrEngine = new RapidOcr();
+ocrEngine.InitModels(detPath, clsPath, recPath, keysPath, 0);
+
+string[] imagePaths = new[]
 {
-    internal class Program
+    "../RapidOcrNet.Tests/images/1997.png",
+    "../RapidOcrNet.Tests/images/rotated.PNG",
+    "../RapidOcrNet.Tests/images/rotated2.PNG",
+    "../RapidOcrNet.Tests/images/img_10.jpg",
+    "../RapidOcrNet.Tests/images/img_11.jpg",
+    "../RapidOcrNet.Tests/images/img_12.jpg",
+    "../RapidOcrNet.Tests/images/img_195.jpg"
+};
+
+foreach (var path in imagePaths)
+{
+    Console.WriteLine($"\nProcessing image: {Path.GetFileName(path)}");
+    Console.WriteLine("----------------------------------------");
+
+    if (!File.Exists(path))
     {
-        static void Main(string[] args)
+        Console.WriteLine($"File not found: {path}");
+        continue;
+    }
+
+    using (var image = SKBitmap.Decode(path))
+    {
+        var result = ocrEngine.Detect(image, RapidOcrOptions.Default);
+        
+        foreach (var block in result.TextBlocks)
         {
-            if (args.Length == 0)
-            {
-                args = new string[]
-                {
-                    "img_10.jpg",
-                    "rotated.PNG",
-                    "rotated2.PNG",
-                    "1997.png",
-                    "5090.FontNameList.1_raw.png",
-                    "5090.FontNameList.2_raw.png"
-                };
-            }
-
-            using var ocrEngin = new RapidOcr();
-            ocrEngin.InitModels();
-
-            foreach (var path in args)
-            {
-                ProcessImage(ocrEngin, path);
-            }
-
-            Console.WriteLine("Bye, RapidOcrNet!");
-        }
-
-        static void ProcessImage(RapidOcr ocrEngin, string targetImg)
-        {
-            Console.WriteLine($"Processing {targetImg}");
-            using (SKBitmap sourceBitmap = SKBitmap.Decode(targetImg))
-            {
-                var bitmap = new SKBitmap(sourceBitmap.Width, sourceBitmap.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
-                sourceBitmap.CopyTo(bitmap);
-                try
-                {
-                    OcrResult ocrResult = ocrEngin.Detect(bitmap, RapidOcrOptions.Default);
-                    Console.WriteLine(ocrResult.ToString());
-                    Console.WriteLine(ocrResult.StrRes);
-                    Console.WriteLine();
-
-                    foreach (var block in ocrResult.TextBlocks)
-                    {
-                        var points = block.BoxPoints;
-                        using (var canvas = new SKCanvas(bitmap))
-                        using (var paint = new SKPaint() { Color = SKColors.Red })
-                        {
-                            canvas.DrawLine(points[0], points[1], paint);
-                            canvas.DrawLine(points[1], points[2], paint);
-                            canvas.DrawLine(points[2], points[3], paint);
-                            canvas.DrawLine(points[3], points[0], paint);
-                        }
-                    }
-
-                    using (var fs = new FileStream(Path.ChangeExtension(targetImg, "_ocr.png"), FileMode.Create))
-                    {
-                        bitmap.Encode(fs, SKEncodedImageFormat.Png, 100);
-                    }
-                }
-                finally
-                {
-                    bitmap.Dispose();
-                }
-            }
+            Console.WriteLine(string.Join("", block.Chars));
         }
     }
 }
+
+ocrEngine.Dispose();
