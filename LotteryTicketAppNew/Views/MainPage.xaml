@@ -69,12 +69,6 @@
                     Text="Save Results"
                     Command="{Binding SaveResultsCommand}"
                     IsVisible="{Binding DetectedText.Count, Converter={StaticResource IsNotZero}}" />
-
-                <Button
-                    Text="Diagnostics"
-                    Command="{Binding ShowDiagnosticInfoCommand}"
-                    BackgroundColor="Orange"
-                    TextColor="White" />
             </HorizontalStackLayout>
 
             <ActivityIndicator 
