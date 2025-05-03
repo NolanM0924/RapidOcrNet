@@ -24,8 +24,12 @@
     <RuntimeIdentifier Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">maccatalyst-arm64</RuntimeIdentifier>
     
     <!-- ONNX Runtime settings -->
-    <PublishTrimmed>true</PublishTrimmed>
     <NoWarn>$(NoWarn);NU1605</NoWarn>
+  </PropertyGroup>
+
+  <!-- Enable trimming only for Windows -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows10.0.19041.0'">
+    <PublishTrimmed>true</PublishTrimmed>
   </PropertyGroup>
 
   <ItemGroup>
