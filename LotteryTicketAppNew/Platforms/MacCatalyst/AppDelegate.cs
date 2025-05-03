@@ -1,7 +1,7 @@
 using Foundation;
 
 namespace LotteryTicketAppNew;
-
+ 
 [Register("AppDelegate")]
 public class AppDelegate : MauiUIApplicationDelegate
 {

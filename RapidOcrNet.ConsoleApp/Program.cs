@@ -34,14 +34,14 @@ foreach (var path in imagePaths)
     }
 
     using (var image = SKBitmap.Decode(path))
-    {
+                        {
         var result = ocrEngine.Detect(image, RapidOcrOptions.Default);
         
         foreach (var block in result.TextBlocks)
         {
             Console.WriteLine(string.Join("", block.Chars));
-        }
-    }
+                    }
+                }
 }
 
 ocrEngine.Dispose();

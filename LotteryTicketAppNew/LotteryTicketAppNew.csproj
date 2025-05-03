@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net8.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks>net8.0-maccatalyst net8.0-windows10.0.19041.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <RootNamespace>LotteryTicketAppNew</RootNamespace>
     <UseMaui>true</UseMaui>
@@ -20,6 +20,12 @@
     <ApplicationVersion>1</ApplicationVersion>
 
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
+    
+    <RuntimeIdentifier Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">maccatalyst-arm64</RuntimeIdentifier>
+    
+    <!-- ONNX Runtime settings -->
+    <PublishTrimmed>true</PublishTrimmed>
+    <NoWarn>$(NoWarn);NU1605</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -38,11 +44,73 @@
 
     <!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
     <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+    
+    <!-- OCR Model files -->
+    <MauiAsset Include="..\RapidOcrNet\models\*.onnx" Link="Resources\Raw\models\%(Filename)%(Extension)" />
+    <MauiAsset Include="..\RapidOcrNet\models\*.txt" Link="Resources\Raw\models\%(Filename)%(Extension)" />
+    
+    <!-- Add ONNX Runtime script to project -->
+    <None Include="copy-onnxruntime-libs.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Maui.Controls" Version="8.0.100" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
+    <PackageReference Include="SkiaSharp" Version="2.88.8" />
+    <!-- Use a specific version of ONNX Runtime with better MacCatalyst support -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.13.1" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.13.1" />
+    <!-- Required for iOS/MacCatalyst -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Extensions.Dummy" Version="0.7.0" />
   </ItemGroup>
+
+  <!-- Reference the RapidOcrNet project but exclude its package dependencies -->
+  <ItemGroup>
+    <ProjectReference Include="..\RapidOcrNet\RapidOcrNet.csproj">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </ProjectReference>
+  </ItemGroup>
+  
+  <!-- Disable trimming for specific assemblies -->
+  <ItemGroup>
+    <TrimmerRootAssembly Include="Microsoft.ML.OnnxRuntime" />
+    <TrimmerRootAssembly Include="RapidOcrNet" />
+    <TrimmerRootAssembly Include="System.Reflection.Emit" />
+    <TrimmerRootAssembly Include="System.Reflection.Emit.Lightweight" />
+  </ItemGroup>
+  
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+    <MtouchLink>SdkOnly</MtouchLink>
+    <MtouchExtraArgs>$(MtouchExtraArgs) --setenv=MONO_LOG_LEVEL=debug --setenv=DYLD_PRINT_LIBRARIES=1 --setenv=DYLD_PRINT_LIBRARIES_POST_LAUNCH=1 --setenv=DYLD_FALLBACK_LIBRARY_PATH="@loader_path/Frameworks/onnxruntime.framework"</MtouchExtraArgs>
+    <UseHardenedRuntime>true</UseHardenedRuntime>
+    <EnableSGenConc>true</EnableSGenConc>
+    <CodesignEntitlements>Platforms/MacCatalyst/Entitlements.plist</CodesignEntitlements>
+  </PropertyGroup>
+  
+  <!-- Explicitly handle native libraries for MacCatalyst -->
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+    <NativeReference Include="$(PkgMicrosoft_ML_OnnxRuntime)\runtimes\osx\native\libonnxruntime.dylib">
+      <Kind>Dynamic</Kind>
+      <IsCxx>True</IsCxx>
+      <SmartLink>False</SmartLink>
+      <ForceLoad>True</ForceLoad>
+      <Frameworks>Foundation</Frameworks>
+    </NativeReference>
+    
+    <!-- Add CoreML framework reference -->
+    <NativeReference Include="/System/Library/Frameworks/CoreML.framework">
+      <Kind>Framework</Kind>
+      <SmartLink>False</SmartLink>
+      <ForceLoad>True</ForceLoad>
+    </NativeReference>
+  </ItemGroup>
+  
+  <!-- Run the ONNX Runtime library copy script after build -->
+  <Target Name="CopyOnnxRuntimeLibraries" AfterTargets="AfterBuild" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+    <Exec Command="chmod +x &quot;$(ProjectDir)copy-onnxruntime-libs.sh&quot;" />
+    <Exec Command="&quot;$(ProjectDir)copy-onnxruntime-libs.sh&quot; &quot;$(TargetDir)$(MSBuildProjectName).app&quot;" />
+  </Target>
 </Project> 

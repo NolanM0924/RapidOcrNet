@@ -36,11 +36,46 @@
                 Aspect="AspectFit"
                 HorizontalOptions="Center" />
 
-            <Button
-                Text="Clear"
-                Command="{Binding ClearImageCommand}"
-                IsEnabled="{Binding CurrentImage, Converter={StaticResource IsNotNull}}"
-                HorizontalOptions="Center" />
+            <Frame IsVisible="{Binding DetectedText.Count, Converter={StaticResource IsNotZero}}"
+                   BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}"
+                   Padding="10"
+                   Margin="5,0"
+                   CornerRadius="10">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="Detected Text:"
+                           FontAttributes="Bold"
+                           FontSize="16"
+                           Margin="0,0,0,5" />
+                    <CollectionView ItemsSource="{Binding DetectedText}"
+                                    HeightRequest="200">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Label Text="{Binding .}"
+                                       Margin="5,2"
+                                       TextColor="{AppThemeBinding Light=Black, Dark=White}" />
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Frame>
+
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="20">
+                <Button
+                    Text="Clear"
+                    Command="{Binding ClearImageCommand}"
+                    IsEnabled="{Binding CurrentImage, Converter={StaticResource IsNotNull}}" />
+                
+                <Button
+                    Text="Save Results"
+                    Command="{Binding SaveResultsCommand}"
+                    IsVisible="{Binding DetectedText.Count, Converter={StaticResource IsNotZero}}" />
+
+                <Button
+                    Text="Diagnostics"
+                    Command="{Binding ShowDiagnosticInfoCommand}"
+                    BackgroundColor="Orange"
+                    TextColor="White" />
+            </HorizontalStackLayout>
 
             <ActivityIndicator 
                 IsRunning="{Binding IsScanning}"

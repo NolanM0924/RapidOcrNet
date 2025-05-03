@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using LotteryTicketAppNew.ViewModels;
 using LotteryTicketAppNew.Views;
+using LotteryTicketAppNew.Services;
 
 namespace LotteryTicketAppNew;
 
@@ -18,6 +19,7 @@ public static class MauiProgram
             });
 
         // Register services
+        builder.Services.AddSingleton<OcrService>();
         builder.Services.AddSingleton<MainViewModel>();
         builder.Services.AddSingleton<MainPage>();
 
