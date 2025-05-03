@@ -24,7 +24,7 @@
 
   <!-- Enable trimming only for Windows -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows10.0.19041.0'">
-    <PublishTrimmed>true</PublishTrimmed>
+    <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
 
   <ItemGroup>
