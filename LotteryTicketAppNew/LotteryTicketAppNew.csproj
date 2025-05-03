@@ -47,11 +47,6 @@
     <!-- OCR Model files -->
     <MauiAsset Include="..\RapidOcrNet\models\*.onnx" Link="Resources\Raw\models\%(Filename)%(Extension)" />
     <MauiAsset Include="..\RapidOcrNet\models\*.txt" Link="Resources\Raw\models\%(Filename)%(Extension)" />
-    
-    <!-- Add ONNX Runtime script to project -->
-    <None Include="copy-onnxruntime-libs.sh">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <ItemGroup>
